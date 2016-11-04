@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<widget id="HTMLToImage.widget.HTMLToImage" needsEntityContext="false" xmlns="http://www.mendix.com/widget/1.0/">
+    <name>HTML To Image</name>
+    <description>Create an image from an HTML element. Uses the HTML2Canvas library.</description>
+    <icon>
+	iVBORw0KGgoAAAANSUhEUgAAABkAAAAZCAIAAABLixI0AAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA
+	6mAAAF3CculE8AAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAB3RJTUUH4AsECTYvDz6AxwAAAxVJREFUOMuVVD1vXE
+	UUPffOm/fmfXmToHVWIAzOOiGxG6OAEhMQhhRIVECqQJV/kBLED6CgR1RWIoUGGoMLEDTIJIqQkIKSKjGSjT8A27C7kOzbffvezKVYiYbn6Hk0x
+	cxI9+icc89c6na7OGARIJDxkZnFOcHjllf5mmXZrZs/QGRre3tnZ7vdnomTZJBlzWbztdcvMnNdLCIqy/LGjc/6/f6lS+8AvLGxsby8PDs3d+b0
+	6XPnzidpegheRLSwsCDiZmZmojiByPT0s51O7/6D+ysrX11+973qqkq/xNl8mANgpZyzAHmeGo2KfDhUnpqYaICoHq+yKFeu0846mAQYF1lAATF
+	IxJUvLHrn34C4Whrt2l17ZxWsxlcdktI0bq0dWpk6CSJIHV7Ko4kjUBpRAmYAXoN1yABgi1F3IOlRUE3vmWFihLG+8j61pgCYJDLGB6vip2/yzz+
+	FiSrVcHUXowQQmnwax45DAOLxlmIkxBTG9TNBFISwpeQDuf1t+cUn6qhnQwYgthD2EISQmlgEpEfgHAaP6Klpfv4V1fC9UAGw6/cw6IxZ185qGE
+	Mg/Yfq7Kt85qxJ0yAIIDJY+kB+/x6+OUzuwxjM7tbXsrUGa/NUY/K4v3hZhn14AWkfUpOXAL4BEdIGwtguLxXRiJ+b9S+8LcM+tA/t1+4jQGFMy
+	qPmk+rCm3RilhpNrz0PpSV7BBMfhFWpUWAi+AF6f9KxSX3149ANzdRJ6fdc9hDmCfJ0pUauhCLtwzf255vl0kfyyz0QF7e/HFz70O1twcT//a16
+	vPyAtC+7W3Z1xf743aA14dm/ZVSU/RJBBKVq+yVCUeotvsXtOQQG+bDc38t7xWCUlu2XvBcvVg6cA+fXOPzyT8c+uGvvrMofm3xqXs2/zM+cIhN
+	VmvU4LOccMRMrKUfIhxQlIIJzzlmu75eIbG7+Ks75QbC/t2uti+LEBH6v2/WDwJgwTpJWqyX/Y8fVYyKKSmt7nc5v62tMLM79tb/X2d3OsoyZwz
+	A8hEYismU5KgoiaE+DyDnnrAWR1pqZpcqyfwHTXFNyHx9K2AAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNi0xMS0wNFQwOTo1NDo0NyswMTowMGhEo
+	xcAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTYtMTEtMDRUMDk6NTQ6NDcrMDE6MDAZGRurAAAAGXRFWHRTb2Z0d2FyZQBwYWludC5uZXQgNC4wLjEy
+	QwRr7AAAAABJRU5ErkJggg==
+    </icon>
+    <properties>
+
+        <property key="imageEntity" type="entity" required="false">
+            <caption>File Object</caption>
+            <category>Data source</category>
+            <description>The FileDocument specialization to store the image in.</description>
+        </property>
+		<property key="constraint" type="entityConstraint" entityProperty="imageEntity" required="false">
+			<caption>XPath constraint</caption>
+			<category>Data source</category>
+			<description>The xpath constraint on the imageentity to the contextobject.</description>
+		</property>
+        <property key="downloadable" type="boolean" defaultValue="false">
+            <caption>Downloadable</caption>
+            <category>Behavior</category>
+            <description>If set to true, a download button will appear.</description>
+        </property>
+        <property key="savable" type="boolean" defaultValue="false">
+            <caption>Savable</caption>
+            <category>Behavior</category>
+            <description>If set to true, a save button will appear.</description>
+        </property>
+        <property key="fullPage" type="boolean" defaultValue="false">
+            <caption>Full Page</caption>
+            <category>Behavior</category>
+            <description>If set to true the full page will be targeted. No need to fill in Class Name then.</description>
+        </property>
+        <property key="targetClassName" type="string" defaultValue="HTMLObject">
+            <caption>Class Name</caption>
+            <category>Behavior</category>
+            <description>The CSS class to retrieve the HTML Element by.</description>
+        </property>
+        <property key="scaleFactorDownload" type="integer" defaultValue="2">
+            <caption>Scale Factor Download</caption>
+            <category>Behavior</category>
+            <description>The factor to enlarge the to be downloaded HTML canvas with.</description>
+        </property>
+        <property key="fileName" type="string" defaultValue="HTML Image">
+            <caption>File Name</caption>
+            <category>Behavior</category>
+            <description>The name that will be given to the downloadable / to be saved image.</description>
+        </property>
+        <property key="consoleLogging" type="boolean" defaultValue="false">
+            <caption>Logging</caption>
+            <category>Console</category>
+            <description>For debugging purposes.
+			If set to true some logging to check the working of the widget are added to the browser console. The results can be checked in the browser itself in the console tab.</description>
+        </property>
+
+    </properties>
+</widget>
