@@ -6,7 +6,7 @@
     @file      : HTMLToImage.js
     @version   : 1.0
     @author    : Ivo Sturm
-    @date      : 4-11-2016
+    @date      : 12-11-2016
     @copyright : First Consulting
     @license   : free
 
@@ -56,10 +56,13 @@ require({
 		downloadable: true,
 		fullPage: false,
 		scaleFactorDownload: 2,
-		_contextObj: "",
 		constraint: "",
 		buttonsCreated: false,
 		fileGuid			: "",
+		_progressID: null,
+		htmlObjectHeight: 0,
+		htmlObjectWidth: 0,
+		bgcolor: "#F9F9F9",
 
         postCreate: function () {
 			this.buttonsCreated = false;
@@ -108,7 +111,7 @@ require({
                     })
                 });
             }
-            else {
+            else if (this.imageEntity){
                 this._handle = mx.data.subscribe({
                     entity: this.imageEntity,
                     callback: lang.hitch(this, function (entity) {
@@ -137,148 +140,74 @@ require({
 
 					var span = dom.create("span",spanOptions);
 					var downloadBtn = dom.create("button", btnOptions, span);
-					downloadBtn.appendChild(document.createTextNode("Download"));
+					downloadBtn.appendChild(document.createTextNode(this.downloadBtnText));
 
 					on(downloadBtn, "click", lang.hitch(this, function (e) {
-						if (this.fullPage){
-						  this.htmlObject = document.body;
-						}
-						else {
-						  this.htmlObject = document.getElementsByClassName(this.targetClassName)[0];
-						}
-
-						html2canvas_HTML(this.htmlObject,{
-							logging: this.consoleLogging,
-							useCORS: true,
-							//proxy: serverjs,
-							allowTaint:false,
-							onrendered: lang.hitch(this,function(canvas) {
+						
+						var targetElement = this.getHTMLObject();										
+						var options = this.getOptions(this.htmlObjectWidth,this.htmlObjectHeight);
+												
+						html2canvas_HTML(targetElement,options).then(lang.hitch(this,function(canvas) {
 
 								var dataUrl= canvas.toDataURL("image/png",1);
 								
-								if (this.consoleLogging){
-									console.log(dataUrl);
-								}
-
 								var a = document.createElement('a');
-								// toDataURL defaults to png, so we need to request a jpeg, then convert for file download.
+									// toDataURL defaults to png, so we need to request a jpeg, then convert for file download.
 								a.href = canvas.toDataURL("image/jpeg").replace("image/jpeg", "image/octet-stream");
 								a.download = this.fileName + ".jpg";
 								a.click();
+									
+								this.hideProgress();
 
-							})
-
-						});
+								})
+						)
 
 					}));
-					  // add the button outside the this.domNode, otherwise it would be included in the downloaded picture.
-					  this.domNode.appendChild(downloadBtn);
-					  this.buttonsCreated = true;
+					// add the button outside the this.domNode, otherwise it would be included in the downloaded picture.
+					this.domNode.appendChild(downloadBtn);
+					this.buttonsCreated = true;
 
 			  }
 			  if (this.savable){
+					if (this.constraint != "" && this.imageEntity != null){
 
-					var btnSaveOptions = {
-						"class" : "html-save mx-button btn",
-						"type" : "button",
-						"style" : "margin: 2px"
-					};
-					var spanSaveOptions = {
-						"class" : "glyphicon glyphicon-ok"
-					}
-
-					var spanSave = dom.create("span",spanSaveOptions);
-					var saveBtn = dom.create("button", btnSaveOptions, spanSave);
-					saveBtn.appendChild(document.createTextNode("Opslaan"));
-
-					on(saveBtn, "click", lang.hitch(this, function (e) {
-						if (this.fullPage){
-						  this.htmlObject = document.body;
-						}
-						else {
-						  this.htmlObject = document.getElementsByClassName(this.targetClassName)[0];
+						var btnSaveOptions = {
+							"class" : "html-save mx-button btn",
+							"type" : "button",
+							"style" : "margin: 2px"
+						};
+						var spanSaveOptions = {
+							"class" : "glyphicon glyphicon-ok"
 						}
 
-						html2canvas_HTML(this.htmlObject,{
-							logging: this.consoleLogging,
-							useCORS: true,
-							//proxy: serverjs,
-							allowTaint:false,
-							onrendered: lang.hitch(this,function(canvas) {
+						var spanSave = dom.create("span",spanSaveOptions);
+						var saveBtn = dom.create("button", btnSaveOptions, spanSave);
+						saveBtn.appendChild(document.createTextNode(this.saveBtnText));
+
+						on(saveBtn, "click", lang.hitch(this, function (e) {
+														
+							var targetElement = this.getHTMLObject();					
+							var options = this.getOptions(this.htmlObjectWidth,this.htmlObjectHeight);
+													
+							html2canvas_HTML(targetElement,options).then(lang.hitch(this,function(canvas) {
 
 								var dataUrl= canvas.toDataURL("image/png",1);
-								//srcEl.style.display = "none";
-
-								if (this.consoleLogging){
-									console.log(dataUrl.replace("data:image/png;base64,", ""));
-								}
 								var fileBlob = this._b64toBlob(dataUrl.replace("data:image/png;base64,", ""), "image/jpeg");
 
 								this._saveFile(fileBlob);
+									
+							}));
 
-							})
-
-						});
-
-					}));
-					
-					// add the button outside the this.domNode, otherwise it would be included in the downloaded picture.
-					this.domNode.appendChild(saveBtn);
-					this.buttonsCreated = true;
-			  }
-			} else {
-				
-			}
-		},
-		takeHighResScreenshot : function(srcEl, scaleFactor) {
-			console.log(this.id + ".takeHighResScreenshot");
-			// Save original size of element
-			var originalWidth = srcEl.offsetWidth;
-			var originalHeight = srcEl.offsetHeight;
-			// Force px size (no %, EMs, etc)
-			srcEl.style.width = originalWidth + "px";
-			srcEl.style.height = originalHeight + "px";
-
-			// Position the element at the top left of the document because of bugs in html2canvas. The bug exists when supplying a custom canvas, and offsets the rendering on the custom canvas based on the offset of the source element on the page; thus the source element MUST be at 0, 0.
-			// See html2canvas issues #790, #820, #893, #922
-			srcEl.style.position = "absolute";
-			srcEl.style.top = "0";
-			srcEl.style.left = "0";
-
-			// Create scaled canvas
-			var scaledCanvas = document.createElement("canvas");
-			scaledCanvas.width = originalWidth * scaleFactor;
-			scaledCanvas.height = originalHeight * scaleFactor;
-			scaledCanvas.style.width = originalWidth + "px";
-			scaledCanvas.style.height = originalHeight + "px";
-			var scaledContext = scaledCanvas.getContext("2d");
-			scaledContext.scale(scaleFactor, scaleFactor);
-
-			html2canvas_HTML(srcEl ,{
-					canvas: scaledCanvas,
-					logging: this.consoleLogging,
-					useCORS: true,
-					//proxy: serverjs,
-					allowTaint:false,
-					onrendered: lang.hitch(this,function(canvas) {
-						console.dir(canvas);
-						var dataUrl= canvas.toDataURL("image/png",1);
-						//srcEl.style.display = "none";
-						var a = document.createElement('a');
-						// toDataURL defaults to png, so we need to request a jpeg, then convert for file download.
-						a.href = canvas.toDataURL("image/jpeg").replace("image/jpeg", "image/octet-stream");
-						a.download = this.fileName + ".jpg";
-						a.click();
-					})
-
-
-			});
-
-			/*.then(function(canvas) {
-				destIMG.src = canvas.toDataURL("image/png");
-				srcEl.style.display = "none";
-			});*/
-
+						}));
+						
+						// add the button outside the this.domNode, otherwise it would be included in the downloaded picture.
+						this.domNode.appendChild(saveBtn);
+						this.buttonsCreated = true;
+					} else {
+						alert(this.id + "\n\nIf savable is set to true, both the constraint and imageEntity need to be set in the widget settings!\n\nPlease check the widget settings!");
+					}
+			  } 
+			} 
 		},
 		_b64toBlob : function(b64Data, contentType, sliceSize) {
 			if (this.consoleLogging){
@@ -328,7 +257,6 @@ require({
 						}
 					}
 					obj.set("Name",this.fileName);
-					console.dir(obj);
 					mx.data.commit({
 						mxobj: obj,
 						callback: lang.hitch(this,function() {
@@ -337,27 +265,96 @@ require({
 							}
 						}),
 						error: lang.hitch(this,function(e) {
-							alert(this.id + ": Error occurred attempting to commit: " + e);
+							this.hideProgress();
+							alert(this.id + ": Error occurred attempting to commit: " + e);						
 						})
 					});
 
 					if (this.fileGuid !== ""){
 						mx.data.saveDocument(this.fileGuid, this.fileName + ".jpg", { width: 180, height: 180 }, fileBlob, function() {
-						  alert('succesvol opgeslagen!');
+							// success
 						}, lang.hitch(this,function(e) {
 							alert(this.id + ": Error occurred attempting to save document: " + e);
+							this.hideProgress();
 						}));
 					}
+					
 				}),
 				error: lang.hitch(this,function(e) {
+					this.hideProgress();
 					if (this.consoleLogging){
 						console.log("an error occured: " + e);
 					}
 
 				})
 			});
+			this.hideProgress();
+		},
+		getHTMLObject : function(){
+			this._progressID = mx.ui.showProgress(this.message);
+			if (this.fullPage){
+				var body = document.body;
+				this.htmlObject = body;		
+				this.htmlObjectWidth = this.htmlObject.getBoundingClientRect().width;	
+			}
+			else {
+				this.htmlObject = document.getElementsByClassName(this.targetClassName)[0];	
+				this.htmlObjectWidth = this.htmlObject.offsetWidth;				
+			}
+			if (this.consoleLogging){
+				console.log(this.id + 'htmlObject for image:');
+				console.dir(this.htmlObject);
+			}
+			if (this.htmlObject) {
+				var allNodes = this.htmlObject.getElementsByTagName("*");
+				var maxHeight = 0;
+				for (var j = 0; j < allNodes.length;  j++) {
+					var thisH = allNodes[j].clientHeight;
+					if (thisH > maxHeight) { 
+						maxHeight = thisH; 
+						if (this.consoleLogging){
+							console.log(this.id + "maxHeight of htmlObject:" + maxHeight);
+						}
+					}
+				}
+  
+				this.htmlObjectHeight = maxHeight;
+
+				return this.htmlObject;
+				
+			} else {			
+				alert(this.id + "\n\nNo HTML element found based on the CSS Class set in the widget.\n\nPlease check the widget settings!");
+				return null;
+			}
+		},
+		getOptions : function(useWidth,useHeight){
+			if (this.consoleLoggin){
+				console.log(this.id + "htmlObject width: " + useWidth + " ,height: " + useHeight);
+			}
+			return {
+				width: useWidth,
+				height: useHeight,
+				background: this.bgColor,
+				logging: this.consoleLogging,
+				useCORS: this.useCORS,
+				letterRendering: this.letterRendering,
+				//proxy: serverjs,
+				allowTaint:this.allowTaint,
+				timeout: this.timeout
+			};
+		},
+		hideProgress : function(){
+			if (this._progressID) {
+				mx.ui.hideProgress(this._progressID);
+				this._progressID = null;
+			}
+		},
+		uninitialize : function(){
+			this.hideProgress();
 		}
-    });
+		
+	})
+	
 });
 
 require(["HTMLToImage/widget/HTMLToImage"]);
